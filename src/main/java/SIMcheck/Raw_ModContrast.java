@@ -21,10 +21,9 @@ package SIMcheck;
 import ij.*;
 import ij.process.*;
 import ij.plugin.*;
-import java.io.*;
-import java.awt.image.IndexColorModel;
 import ij.plugin.HyperStackConverter;
 import ij.gui.GenericDialog;
+import java.awt.image.IndexColorModel;
 
 /** This plugin displays a modulation contrast map for raw SI data. 
  * For each channel, displaying the result with a LUT which is also shown. 
@@ -70,7 +69,8 @@ public class Raw_ModContrast implements PlugIn, EProcessor {
 
     String name = "Raw Data Modulation Contrast (MCN)";
     ResultSet results = new ResultSet(name);
-    String contrastLUTfile = "MCNR.lut";
+    private static final IndexColorModel mcnrLUT = 
+            I1l.loadLut("SIMcheck/MCNR.lut");
     
     // parameter fields
     public int phases = 5;
@@ -237,8 +237,7 @@ public class Raw_ModContrast implements PlugIn, EProcessor {
         impResult.setT(1);
         impResult.setOpenAsHyperStack(true);
         if (!doRawFourier) {
-            IndexColorModel LUT = loadLut(contrastLUTfile);
-            I1l.applyLUT(impResult, LUT, displayRange);
+            I1l.applyLUT(impResult, mcnrLUT, displayRange);
             results.addImp("modulation contrast-to-noise ratio image", 
                     impResult);
             results.addInfo("Modulation contrast-to-noise ratio (MCNR)",
@@ -272,7 +271,7 @@ public class Raw_ModContrast implements PlugIn, EProcessor {
          * using dataset where MCNR = 4.6 sigma^2 has optimal Wiener = 0.04
          *   x / 4.6^2  = 0.004, => x = 0.085 and Wiener = 0.085 / (MCNR^2)
          */
-        return 0.085d / (mcnr * mcnr);
+        return 0.170d / (mcnr * mcnr);  // 0.0085 doubled based on Wiener series
     }
     
     /** Calculate DFT for window orthogonal to an XY slice. */
@@ -285,24 +284,6 @@ public class Raw_ModContrast implements PlugIn, EProcessor {
         vp = I1l.normalizeInner(vp);
         vp = DFT1D.dftOuter(vp);
         return vp;
-    }
-
-    /** Load a LUT from a file (NB. getClass() is non-static) */
-    IndexColorModel loadLut(String LUTfile) {
-        InputStream is = getClass().getResourceAsStream(LUTfile);
-        IndexColorModel cm = null;
-        if (is != null) {
-            try {
-                cm = LutLoader.open(is);
-            } catch (IOException e) {
-                IJ.log("  ! error loading LUT");
-                IJ.error("" + e);
-            }
-        }
-        if (cm == null) {
-            IJ.log("  ! warning: cm is null");
-        }
-        return cm;
     }
 
     /** Calculate position of different orders/bands in frequency space.

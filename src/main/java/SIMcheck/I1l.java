@@ -17,11 +17,14 @@
 
 package SIMcheck;
 import ij.*;
+import ij.plugin.LutLoader;
 import ij.process.*;
 import ij.measure.Calibration;
 
 import java.awt.Polygon;
 import java.awt.image.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 
 /** 
@@ -339,6 +342,26 @@ public final class I1l {
         return filteredPeaks;
     }
     
+    /** Load a LUT from a file. (NB. getClass is non-static) */
+    public static IndexColorModel loadLut(String LUTfile) {
+        IndexColorModel cm = null;
+        InputStream is = I1l.class.getClassLoader().getResourceAsStream(LUTfile);
+        if (is == null) {
+            IJ.log("! InputStream null for " + LUTfile);
+        } else {
+            try {
+                cm = LutLoader.open(is);
+            } catch (IOException e) {
+                IJ.log("! error opening InputStream while loading LUT");
+                IJ.error("" + e);
+            }
+            if (cm == null) {
+                IJ.log("! error loading LUT - IndexColorModel is null");
+            }
+        }
+        return cm;
+    }
+    
     /** 
      * Make a new title using old (short) title of the ImagePlus
      * with a specified suffix.
@@ -487,6 +510,15 @@ public final class I1l {
         return arrString;
     }
     
+    
+    /** Convert array to string for printing. */
+    public static String prn(long[] arr) {
+        String arrString = "";
+        for (int i = 0; i < arr.length; i++) {
+            arrString += " " + arr[i];
+        }
+        return arrString;
+    }
     
     /** Convert array to string for printing. */
     public static String prn(int[] arr) {

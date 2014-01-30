@@ -1,1 +1,14 @@
 *.class
+.DS_Store
+mk
+build.log
+lib
+plugins
+y
+z
+test_images
+public/
+extras/
+src/test/resources/
+docs/
+target/
